@@ -1,0 +1,262 @@
+<html>
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Pacifico&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div id="title">
+  Skezl - Free, No Download, <span class="fancy">Absolute</span> Unblocked Games
+</div>
+
+<div id="menu">
+
+  <div class="game">
+    <img src="https://cdn.jsdelivr.net/gh/woodle87/iimages@main/snowrider.jfif">
+    <button onclick="showGame(0)">Snow Rider 3D</button>
+  </div>
+
+  <div class="game">
+    <img src="https://cdn.jsdelivr.net/gh/woodle87/iimages@main/ragdollhit.jfif">
+    <button onclick="showGame(1)">Ragdoll Hit</button>
+  </div>
+
+  <div class="game">
+    <img src="https://cdn.jsdelivr.net/gh/woodle87/iimages@main/slope.jfif">
+    <button onclick="showGame(2)">Slope</button>
+  </div>
+
+  <div class="game">
+    <img src="https://cdn.jsdelivr.net/gh/woodle87/iimages@main/survivalrace.jfif">
+    <button onclick="showGame(3)">Survival Race</button>
+  </div>
+
+  <div class="game">
+    <img src="https://cdn.jsdelivr.net/gh/woodle87/iimages@main/gunspin.jfif">
+    <button onclick="showGame(4)">Gunspin</button>
+  </div>
+
+  <div class="game">
+    <img src="https://cdn.jsdelivr.net/gh/woodle87/iimages@main/hextris.png">
+    <button onclick="showGame(5)">Hextris</button>
+  </div>
+
+</div>
+
+<!-- 🔥 NEW FOOTER TEXT -->
+<div id="footer">
+  Skezl Unblockable Games · Saves Progress (Just Don't Close the Tab) · F11 For Better
+</div>
+
+<div id="gamePage" style="display:none;">
+  <div id="topBar">
+    <button onclick="goBack()">← Back</button>
+    <button onclick="playGame()">PLAY</button>
+    <button onclick="openFullscreen()">FULLSCREEN</button>
+  </div>
+
+  <iframe id="fr"></iframe>
+</div>
+
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+  background: #ff2c14;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  text-align: center;
+  overflow: hidden;
+}
+
+#title {
+  font-size: 30px;
+  margin-top: 15px;
+}
+
+.fancy {
+  font-family: 'Pacifico', cursive;
+  color: black;
+}
+
+#menu {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game img {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.game button {
+  width: 160px;
+  padding: 12px;
+  font-size: 16px;
+  background: black;
+  color: white;
+  border: 3px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.game button:hover {
+  background: white;
+  color: black;
+}
+
+/* 🔥 Footer styling */
+#footer {
+  margin-top: 25px;
+  font-size: 16px;
+  color: white;
+}
+
+/* GAME PAGE */
+
+#gamePage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#topBar {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  z-index: 10;
+}
+
+#topBar button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#fr {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 120px);
+  border: none;
+}
+</style>
+
+<script>
+const DB_NAME = 'GameCacheDB';
+const STORE_NAME = 'GameFiles';
+const CACHE_DURATION = 90 * 24 * 60 * 60 * 1000;
+
+const links = [
+  "https://cdn.jsdelivr.net/gh/woodle87/syeswrider@main/index.html",
+  "https://cdn.jsdelivr.net/gh/woodle87/i7box1@main/index.html",
+  "https://cdn.jsdelivr.net/gh/woodle87/sple@main/index.html",
+  "https://cdn.jsdelivr.net/gh/woodle87/dfre@main/index.html",
+  "https://cdn.jsdelivr.net/gh/woodle87/gunspinfr@main/index.html",
+  "https://cdn.jsdelivr.net/gh/woodle87/hex@main/index.html"
+];
+
+let currentGame = 0;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (event) => {
+      event.target.result.createObjectStore(STORE_NAME, { keyPath: 'url' });
+    };
+    request.onsuccess = (event) => resolve(event.target.result);
+    request.onerror = (event) => reject(event.target.error);
+  });
+}
+
+async function saveToCache(url, content) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  tx.objectStore(STORE_NAME).put({
+    url: url,
+    content: content,
+    timestamp: Date.now()
+  });
+}
+
+async function getFile(url) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const req = tx.objectStore(STORE_NAME).get(url);
+
+    req.onsuccess = async () => {
+      const data = req.result;
+      if (data && (Date.now() - data.timestamp) < CACHE_DURATION) {
+        resolve(data.content);
+      } else {
+        const res = await fetch(url);
+        const text = await res.text();
+        await saveToCache(url, text);
+        resolve(text);
+      }
+    };
+
+    req.onerror = () => reject("DB error");
+  });
+}
+
+function showGame(i) {
+  currentGame = i;
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("title").style.display = "none";
+  document.getElementById("footer").style.display = "none";
+  document.getElementById("gamePage").style.display = "block";
+}
+
+function goBack() {
+  document.getElementById("gamePage").style.display = "none";
+  document.getElementById("menu").style.display = "flex";
+  document.getElementById("title").style.display = "block";
+  document.getElementById("footer").style.display = "block";
+  document.getElementById("fr").src = "";
+}
+
+function playGame() {
+  const iframe = document.getElementById("fr");
+
+  getFile(links[currentGame]).then(text => {
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(text);
+    iframe.contentDocument.close();
+  });
+}
+
+function openFullscreen() {
+  getFile(links[currentGame]).then(text => {
+    const w = window.open("", "_blank");
+    w.document.open();
+    w.document.write(text);
+    w.document.close();
+  });
+}
+</script>
+
+</body>
+</html>
