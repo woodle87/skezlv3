@@ -41,9 +41,13 @@
     <button onclick="showGame(5)">Hextris</button>
   </div>
 
+  <div class="game">
+    <img src="https://cdn.jsdelivr.net/gh/woodle87/iimages@main/football bros.jfif">
+    <button onclick="showGame(6)">Football Bros</button>
+  </div>
+
 </div>
 
-<!-- 🔥 NEW FOOTER TEXT -->
 <div id="footer">
   Skezl Unblockable Games · Saves Progress (Just Don't Close the Tab) · F11 For Better
 </div>
@@ -117,14 +121,11 @@ body, html {
   color: black;
 }
 
-/* 🔥 Footer styling */
 #footer {
   margin-top: 25px;
   font-size: 16px;
   color: white;
 }
-
-/* GAME PAGE */
 
 #gamePage {
   position: fixed;
@@ -174,7 +175,8 @@ const links = [
   "https://cdn.jsdelivr.net/gh/woodle87/sple@main/index.html",
   "https://cdn.jsdelivr.net/gh/woodle87/dfre@main/index.html",
   "https://cdn.jsdelivr.net/gh/woodle87/gunspinfr@main/index.html",
-  "https://cdn.jsdelivr.net/gh/woodle87/hex@main/index.html"
+  "https://cdn.jsdelivr.net/gh/woodle87/hex@main/index.html",
+  "https://cdn.jsdelivr.net/gh/woodle87/fb@main/index.html"
 ];
 
 let currentGame = 0;
@@ -182,9 +184,11 @@ let currentGame = 0;
 function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
+
     request.onupgradeneeded = (event) => {
       event.target.result.createObjectStore(STORE_NAME, { keyPath: 'url' });
     };
+
     request.onsuccess = (event) => resolve(event.target.result);
     request.onerror = (event) => reject(event.target.error);
   });
@@ -192,7 +196,9 @@ function openDB() {
 
 async function saveToCache(url, content) {
   const db = await openDB();
+
   const tx = db.transaction(STORE_NAME, 'readwrite');
+
   tx.objectStore(STORE_NAME).put({
     url: url,
     content: content,
@@ -202,18 +208,22 @@ async function saveToCache(url, content) {
 
 async function getFile(url) {
   const db = await openDB();
+
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
     const req = tx.objectStore(STORE_NAME).get(url);
 
     req.onsuccess = async () => {
       const data = req.result;
+
       if (data && (Date.now() - data.timestamp) < CACHE_DURATION) {
         resolve(data.content);
       } else {
         const res = await fetch(url);
         const text = await res.text();
+
         await saveToCache(url, text);
+
         resolve(text);
       }
     };
@@ -224,6 +234,7 @@ async function getFile(url) {
 
 function showGame(i) {
   currentGame = i;
+
   document.getElementById("menu").style.display = "none";
   document.getElementById("title").style.display = "none";
   document.getElementById("footer").style.display = "none";
@@ -235,6 +246,7 @@ function goBack() {
   document.getElementById("menu").style.display = "flex";
   document.getElementById("title").style.display = "block";
   document.getElementById("footer").style.display = "block";
+
   document.getElementById("fr").src = "";
 }
 
@@ -251,6 +263,7 @@ function playGame() {
 function openFullscreen() {
   getFile(links[currentGame]).then(text => {
     const w = window.open("", "_blank");
+
     w.document.open();
     w.document.write(text);
     w.document.close();
